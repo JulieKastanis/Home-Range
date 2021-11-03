@@ -1,0 +1,100 @@
+body style="background-color:lightblue;">
+
+
+---
+title: GIS Assignment 3: Home Range Data
+---
+
+```{=html}
+<style type="text/css">
+h1.title {
+  font-size: 40px;
+  font-family: "Times New Roman", Times, serif;
+  color: Black;
+  text-align: center;
+}
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
+  font-weight: bold;
+  color: #D02349;
+  text-align: center;
+}
+body {
+  font-family: Helvetica;
+  font-size: 12pt;
+}
+.zoom {
+  transform-origin: 40% 50% 0;
+  transition: transform .2s;
+  margin: 0 auto;
+}
+.zoom img{
+	width:auto;
+	height:auto;	
+}
+.zoom:hover {
+  transform: scale(2);
+}
+th, td {padding: 5px;}
+</style>
+```
+
+
+
+
+```{r library}
+library(ggplot2)
+library(maps)
+library(OpenStreetMap)
+library(mapproj)
+library(ggmap)
+library(cowplot)
+library(dismo)
+library(leaflet)
+library(rasterVis)
+library(raster)
+library(readxl)
+library(rgbif)
+library(rgdal)
+library(utils)
+library(rdryad)
+library(adehabitatHR)
+library(data.table)
+library(ggfortify)
+library(grid)
+library(move)
+library(moveVis)
+library(plotly)
+library(pbapply)
+library(sp)
+library(tidyverse)
+library(viridis)
+```
+
+<center>![Figure 1. Grey Wolf (Canis lupus)](images/graywolf.jpg){width=40%}</center>
+
+
+```{r read_data_wolf}
+data <- read.csv("32269_33678-33678.csv")
+```
+
+```{r head_data}
+head(data)
+```
+
+```{r plot_visualization}
+
+plot <- ggplot() + geom_point(data=data, 
+                                   aes(location.long,location.lat,
+                                       color=individual.local.identifier)) +
+                        labs(x="Longitude", y="Latitude") +
+                        guides(color=guide_legend("Identifier"))
+ggplotly(plot)
+```
+```{r }
+lapply(split(data, data$individual.local.identifier), 
+       function(x)write.csv(x, file = paste(x$individual.local.identifier[1],".csv", sep = ""), row.names = FALSE))
+```
+
+
