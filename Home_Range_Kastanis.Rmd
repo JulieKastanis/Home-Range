@@ -76,7 +76,7 @@ library(viridis)
 
 
 ```{r read_data_wolf}
-data <- read.csv("32269_33678-33678.csv")
+data <- read.csv("15008-15008.csv")
 ```
 
 ```{r head_data}
@@ -86,15 +86,79 @@ head(data)
 ```{r plot_visualization}
 
 plot <- ggplot() + geom_point(data=data, 
-                                   aes(location.long,location.lat,
+                                   aes(utm.easting,utm.northing,
                                        color=individual.local.identifier)) +
-                        labs(x="Longitude", y="Latitude") +
+                        labs(x="Easting", y="Northing") +
                         guides(color=guide_legend("Identifier"))
 ggplotly(plot)
 ```
-```{r }
+
+
+```{r lapply}
 lapply(split(data, data$individual.local.identifier), 
        function(x)write.csv(x, file = paste(x$individual.local.identifier[1],".csv", sep = ""), row.names = FALSE))
 ```
 
+```{r files}
+files <- list.files(path = ".", pattern = "[Gray Wolf]+[0-9]+", full.names = TRUE)
+```
 
+
+```{r add_raster_data}
+utm_points <- cbind(data$utm.easting, data$utm.northing)
+utm_locations <- SpatialPoints(utm_points, 
+                 proj4string=CRS("+proj=utm +zone=47 +datum=WGS84"))
+proj_lat.lon <- as.data.frame(spTransform(
+                utm_locations, CRS("+proj=longlat +datum=WGS84")))
+colnames(proj_lat.lon) <- c("x","y")
+raster <- openmap(c(max(proj_lat.lon$y)+0.01, min(proj_lat.lon$x)-0.01), 
+                  c(min(proj_lat.lon$y)-0.01, max(proj_lat.lon$x)+0.01), 
+                  type = "bing")
+raster_utm <- openproj(raster, 
+              projection = "+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs")
+```
+
+
+
+```{r raster_autoplo}
+autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() +
+  theme(legend.position="bottom") +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+  geom_point(data=data, aes(location.long,location.lat,
+             color=individual.local.identifier), size = 3, alpha = 0.8) +
+  theme(axis.title = element_text(face="bold")) + labs(x="Longitude",
+        y="Latitude") + guides(color=guide_legend("Identifier"))
+```
+
+
+
+```{r raster_function}
+mcp_raster <- function(individual.local.identifier){
+  data <- read.csv(individual.local.identifier)
+  x <- as.data.frame(data$utm.easting)
+  y <- as.data.frame(data$utm.northing)
+  xy <- c(x,y)
+  data.proj <- SpatialPointsDataFrame(xy,data, proj4string = CRS("+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs"))
+  xy <- SpatialPoints(data.proj@coords)
+  mcp.out <- mcp(xy, percent=100, unout="ha")
+  mcp.points <- cbind((data.frame(xy)),data$individual.local.identifier)
+  colnames(mcp.points) <- c("x","y", "identifier")
+  mcp.poly <- fortify(mcp.out, region = "id")
+  units <- grid.text(paste(round(mcp.out@data$area,2),"ha"), x=0.85,  y=0.95,
+                     gp=gpar(fontface=4, col="white", cex=0.9), draw = FALSE)
+  mcp.plot <- autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() + theme(legend.position="none") +
+    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+    geom_polygon(data=mcp.poly, aes(x=mcp.poly$long, y=mcp.poly$lat), alpha=0.8) +
+    geom_point(data=mcp.points, aes(x=x, y=y)) + 
+    labs(x="Easting (m)", y="Northing (m)", title=mcp.points$identifier) +
+    theme(legend.position="none", plot.title = element_text(face = "bold", hjust = 0.5)) + 
+    annotation_custom(units)
+  mcp.plot
+}
+
+pblapply(files, mcp_raster)
+```
+
+```{r files}
+files <- list.files(path = ".", pattern = "[Gray Wolf]+[0-9]+", full.names = TRUE)
+```
