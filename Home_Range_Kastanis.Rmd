@@ -1,4 +1,4 @@
-body style="background-color:lightblue;">
+body style="background-color:lightorange;">
 
 
 ---
@@ -72,7 +72,7 @@ library(tidyverse)
 library(viridis)
 ```
 
-<center>![Figure 1. Grey Wolf (Canis lupus)](images/graywolf.jpg){width=40%}</center>
+<center>![Figure 1. Gray Wolf (Canis lupus)](images/graywolf.jpg){width=40%}</center>
 
 
 ```{r read_data_wolf}
@@ -187,3 +187,7 @@ kde_raster <- function(filename){
 
 pblapply(files, kde_raster)
 ```
+
+
+
+<center>![Figure 2. Gray Wolf Pups](images/WOLFPUPS.jpg){width=40%}</center>
