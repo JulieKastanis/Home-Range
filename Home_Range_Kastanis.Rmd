@@ -133,8 +133,8 @@ autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() +
 
 
 ```{r raster_function}
-mcp_raster <- function(individual.local.identifier){
-  data <- read.csv(individual.local.identifier)
+mcp_raster <- function(paste){
+  data <- read.csv(file = paste)
   x <- as.data.frame(data$utm.easting)
   y <- as.data.frame(data$utm.northing)
   xy <- c(x,y)
@@ -157,8 +157,5 @@ mcp_raster <- function(individual.local.identifier){
 }
 
 pblapply(files, mcp_raster)
-```
 
-```{r files}
-files <- list.files(path = ".", pattern = "[Gray Wolf]+[0-9]+", full.names = TRUE)
 ```
