@@ -123,11 +123,11 @@ raster_utm <- openproj(raster,
 ```{r raster_autoplo}
 autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() +
   theme(legend.position="bottom") +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
-  geom_point(data=data, aes(location.long,location.lat,
+  theme(panel.border = element_rect(colour = "red", fill=NA, size=1)) +
+  geom_point(data=data, aes(utm.easting,utm.northing,
              color=individual.local.identifier), size = 3, alpha = 0.8) +
-  theme(axis.title = element_text(face="bold")) + labs(x="Longitude",
-        y="Latitude") + guides(color=guide_legend("Identifier"))
+  theme(axis.title = element_text(face="bold")) + labs(x="Easting",
+        y="Northing") + guides(color=guide_legend("Identifier"))
 ```
 
 
