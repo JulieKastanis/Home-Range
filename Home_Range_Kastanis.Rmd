@@ -131,10 +131,10 @@ autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() +
 ```
 
 
+```{r polygon}
 
-```{r raster_function}
-mcp_raster <- function(paste){
-  data <- read.csv(file = paste)
+mcp_raster <- function(filename){
+  data <- read.csv(file = filename)
   x <- as.data.frame(data$utm.easting)
   y <- as.data.frame(data$utm.northing)
   xy <- c(x,y)
@@ -157,5 +157,33 @@ mcp_raster <- function(paste){
 }
 
 pblapply(files, mcp_raster)
+  
 
+```
+```{r kernel-density_estimation}
+kde_raster <- function(filename){
+  data <- read.csv(file = filename)
+  x <- as.data.frame(data$utm.easting)
+  y <- as.data.frame(data$utm.northing)
+  xy <- c(x,y)
+  data.proj <- SpatialPointsDataFrame(xy,data, proj4string = CRS("+proj=utm +zone=47 +datum=WGS84 +units=m +no_defs"))
+  xy <- SpatialPoints(data.proj@coords)
+  kde<-kernelUD(xy, h="href", kern="bivnorm", grid=100)
+  ver <- getverticeshr(kde, 95)
+  kde.points <- cbind((data.frame(data.proj@coords)),data$individual.local.identifier)
+  colnames(kde.points) <- c("x","y","identifier")
+  kde.poly <- fortify(ver, region = "id")
+  units <- grid.text(paste(round(ver$area,2)," ha"), x=0.85,  y=0.95,
+                     gp=gpar(fontface=4, col="white", cex=0.9), draw = FALSE)
+  kde.plot <- autoplot.OpenStreetMap(raster_utm, expand = TRUE) + theme_bw() + theme(legend.position="none") +
+    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+    geom_polygon(data=kde.poly, aes(x=kde.poly$long, y=kde.poly$lat), alpha = 0.8) +
+    geom_point(data=kde.points, aes(x=x, y=y)) +
+    labs(x="Easting (m)", y="Northing (m)", title=kde.points$identifier) +
+    theme(legend.position="none", plot.title = element_text(face = "bold", hjust = 0.5)) + 
+    annotation_custom(units)
+  kde.plot
+}
+
+pblapply(files, kde_raster)
 ```
