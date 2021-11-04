@@ -97,6 +97,25 @@ ggplotly(plot)
 ```
 
 
+
+```{r leaflet}
+pal <- colorFactor(
+  palette = 'Dark2',
+  domain = data$individual.local.identifier
+)
+leaflet(data) %>% 
+  addTiles(group = "Base Map") %>%
+  addWMSTiles("https://basemap.nationalmap.gov/arcgis/services/USGSTopo/MapServer/WmsServer", layers = "0", group = "Terrain Map") %>% 
+  addCircleMarkers(lng=data$location.long, lat=data$location.lat, radius = .5, label = data$individual.local.identifier, group = data$individual.local.identifier, color = ~pal(individual.local.identifier)) %>%
+  addLayersControl(
+    baseGroups = c("Base Map", "Terrain Map", "ESRI"), overlayGroups = c(unique(data$individual.local.identifier)),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+    addScaleBar() %>%
+    addMiniMap(zoomLevelOffset = -4, position = 'bottomleft')
+
+
+```
+
 ```{r lapply}
 lapply(split(data, data$individual.local.identifier), 
        function(x)write.csv(x, file = paste(x$individual.local.identifier[1],".csv", sep = ""), row.names = FALSE))
